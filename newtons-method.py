@@ -30,14 +30,8 @@ def newton_method(f, df, x0, tol=1e-6, max_iter=100):
             raise ValueError("Derivative is zero at the current point.")
         x = x - fx / dfx
         x_history.append(x)
-    raise ValueError("Maximum number of iterations reached without convergence.")
-
-# Example usage
-def f(x):
-    return x**3 - 2*x + 1
-
-def df(x):
-    return 3*x**2 - 2
+    print("Maximum number of iterations reached without convergence.")
+    return x, x_history
 
 plt.ion()  # Enable interactive mode
 
