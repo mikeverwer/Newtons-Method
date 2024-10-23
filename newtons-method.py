@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import sympy as sp
 # import matplotlib.cm as cm
 
 def newton_method(f, df, x0, tol=1e-6, max_iter=100):
@@ -39,6 +40,23 @@ def df(x):
     return 3*x**2 - 2
 
 plt.ion()  # Enable interactive mode
+
+# Get user input for the function and its derivative
+func_input = input("Enter the function f(x) (in terms of x, e.g., x**3 - 2*x + 1): ")
+if func_input == "":
+    func_input = "x**3 - 2*x + 1"
+    deriv_input = "3*x**2 - 2"
+    print(f"Using default function: {func_input}")
+else:
+    deriv_input = input("Enter the derivative f'(x) (in terms of x, e.g., 3*x**2 - 2): ")
+
+
+# Define the symbol
+x = sp.symbols('x')
+
+# Parse the user input into functions
+f = sp.lambdify(x, sp.sympify(func_input), 'numpy')
+df = sp.lambdify(x, sp.sympify(deriv_input), 'numpy')
 
 while True:
     x0 = float(input("Enter the initial guess: "))
