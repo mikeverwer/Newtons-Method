@@ -21,12 +21,17 @@ class App:
         # Create a canvas to embed the figure
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.root)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky='nsew')
 
         # Add a toolbar for zoom and pan functionalities
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self.root)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.root, pack_toolbar=False)
         self.toolbar.update()
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.toolbar.grid(row=1, column=0, sticky='nsew')
+
+        # Configure grid weights to make the layout responsive
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_rowconfigure(1, weight=0)
+        self.root.grid_columnconfigure(0, weight=1)
 
 if __name__ == "__main__":
     root = tk.Tk()

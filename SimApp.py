@@ -163,9 +163,10 @@ class SimulationApp(Tk):
         if not control_panel:
             control_panel = ttk.Frame(mainframe)
             self.build_control_panel(control_panel)
-        control_panel.grid(row=0, column=0)
+        control_panel.grid(row=0, column=0, sticky=(N, E, S, W))
 
         return
+    
     
     def do_bindings(self):
         self.bind()

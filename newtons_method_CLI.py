@@ -1,8 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import sympy as sp
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import re
-# import matplotlib.cm as cm
 
 def newton_method(f, df, x0, tol=1e-6, max_iter=100):
     """
@@ -29,7 +29,6 @@ def newton_method(f, df, x0, tol=1e-6, max_iter=100):
             return x, x_history, error_code
         dfx = df(x)
         if dfx == 0:
-            # raise ValueError("Derivative is zero at the current point, can not continue.")
             print("Derivative is zero at the current point, can not continue.")
             error_code = "0 derivative"
             return x, x_history, error_code
@@ -39,7 +38,7 @@ def newton_method(f, df, x0, tol=1e-6, max_iter=100):
     error_code = "max iterations"
     return x, x_history, error_code
 
-def get_function_input(symbol):
+def create_functions(symbol):
     while True:
         func_input = input("Enter the function f(x) (in terms of x, e.g., sin(x) - 2*x + exp(x): ")
 
@@ -76,13 +75,55 @@ def get_guess_input():
             continue
 
 
-plt.ion()  # Enable interactive mode in order to run the program multiple times without closing plots
+def plot_function_and_tangents(f, df, x_history):
+    # Create a new Matplotlib figure
+    figure = plt.figure(figsize=(8, 6))
+    ax = figure.add_subplot(111)
 
+    # Define the range for x values
+    x_min = min(x_history + [-2]) - 0.05
+    x_max = max(x_history + [2]) + 0.05
+    x = np.linspace(x_min, x_max, 500)
+
+    # Plot the function
+    ax.plot(x, [f(xi) for xi in x], label='Function')
+
+    cmap = plt.get_cmap('Dark2')                                                             # Color map for each iteration
+    for i in range(len(x_history)):
+        xi = x_history[i]
+        fx = f(xi)
+        dfx = df(xi)
+        if dfx != 0:
+            x_int = xi - fx / dfx
+            this_color = cmap(i / max(1, len(x_history) - 1))
+            ax.plot([xi, x_int], [fx, 0], '--', color=this_color, label=f'Iteration {i+1}')  # Tangent line
+            ax.plot([xi, xi], [fx, 0], '--', color=this_color)                               # Vertical line to function
+            ax.plot(xi, fx, 'o', color=this_color, markersize=7)
+
+    ax.plot(x_history[-1], f(x_history[-1]), 'ro', markersize=10, label='Root')
+    ax.axhline(y=0, color='r', linestyle='-')                                               # Highlight x-axis
+    ax.set_xlabel('x')
+    ax.set_ylabel('f(x)')
+    ax.set_title('Newton\'s Method')
+    ax.legend()
+    ax.grid()
+
+    plt.show(block=False)
+    plt.pause(0.1)
+
+
+def ask_for_function(symbol):
+    try:
+        lambda_f, lambda_df = create_functions(symbol)
+        return lambda_f, lambda_df
+    except ValueError as e:
+        print(f"Error: {e}")
+
+
+# Main loop for user input and plotting
 x = sp.symbols('x')
-try:
-    f, df = get_function_input(x)
-except ValueError as e:
-    print(f"Error: {e}")
+
+f, df = ask_for_function(x)
 
 while True:
     x0 = get_guess_input()
@@ -91,39 +132,16 @@ while True:
         print(f"The root of the function is: {root:.6f}")
     else:
         print("Could not find the root, plotting the attempt.")
-
-    # Plot the function and the tangent lines
-    x_min = min(x_history + [-2]) - 0.05
-    x_max = max(x_history + [2]) + 0.05
-    x = np.linspace(x_min, x_max, 500)
-    plt.figure(figsize=(8, 6))
-    plt.plot(x, [f(xi) for xi in x], label='Function')
-
-    cmap = plt.get_cmap('Dark2')                                                              # colour map for each iteration
-    for i in range(len(x_history)):
-        xi = x_history[i]
-        fx = f(xi)
-        dfx = df(xi)
-        if dfx != 0:
-            x_int = xi - fx / dfx
-            this_color = cmap(i / max(1, len(x_history) - 1))
-            plt.plot([xi, x_int], [fx, 0], '--', color=this_color, label=f'Iteration {i+1}')    # tangent line
-            plt.plot([xi, xi], [fx, 0], '--', color=this_color)                                 # vertical line to function
-            plt.plot(xi, fx, 'o', color=this_color, markersize=7)                               
-
-    plt.plot(x_history[-1], f(x_history[-1]), 'ro', markersize=10, label='Root')
-    plt.axhline(y=0, color='r', linestyle='-')                                                  # highlight x-axis
-    plt.xlabel('x')
-    plt.ylabel('f(x)')
-    plt.title('Newton\'s Method')
-    plt.legend()
-    plt.grid()
-    plt.show()
+    
+    plot_function_and_tangents(f, df, x_history)
 
     # Ask the user if they want to run again
     run_again = input("Do you want to guess again? (y/n): ").strip().lower()
     if run_again != 'y':
-        break
+        run_with_new_function = input("Would you like to use a different function? (y/n): ").strip().lower()
+        if run_with_new_function != 'y':
+            break
+        else:
+            f, df = ask_for_function(x)
 
-plt.ioff()  # Disable interactive mode
-plt.close()  # Close all open plots
+plt.close('all')  # Close all open plots
