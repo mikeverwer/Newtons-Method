@@ -38,13 +38,14 @@ def newton_method(f, df, x0, tol=1e-6, max_iter=100):
     error_code = "max iterations"
     return x, x_history, error_code
 
+
 def create_functions(symbol):
     while True:
-        func_input = input("Enter the function f(x) (in terms of x, e.g., sin(x) - 2*x + exp(x): ")
+        func_input = input("Enter the function f(x) (in terms of x, e.g., sin(x) - x + exp(x) - 2: ")
 
         # Sanitize the input: allow valid characters and functions
         # This regex allows digits, operators, x, whitespace, parentheses, and common functions
-        valid_input_pattern = r"^(?:\d+|\b(?:x|sin|cos|tan|exp|ln|log|sqrt)\b|\+|\-|\*{1,2}|\^|\/|\(|\)|\s)+$"
+        valid_input_pattern = r"^(?:\d+|\b(?:x|asin|acos|atan|sin|cos|tan|exp|ln|log|sqrt)\b|\+|\-|\*{1,2}|\^|\/|\(|\)|\s)+$"
         if not re.match(valid_input_pattern, func_input):
             print("Invalid input. Please use only numbers, x, and mathematical operators.")
             continue  # Prompt the user again
@@ -63,7 +64,16 @@ def create_functions(symbol):
         except sp.SympifyError:
             print("Invalid input. Please enter a valid mathematical expression.")
             continue  # Prompt the user again
-    
+
+   
+def ask_for_function(symbol):
+    try:
+        lambda_f, lambda_df = create_functions(symbol)
+        return lambda_f, lambda_df
+    except ValueError as e:
+        print(f"Error: {e}")
+
+
 def get_guess_input():
     while True:
         guess_input = input("Enter the initial guess: ")
@@ -112,15 +122,10 @@ def plot_function_and_tangents(f, df, x_history):
     plt.pause(0.1)
 
 
-def ask_for_function(symbol):
-    try:
-        lambda_f, lambda_df = create_functions(symbol)
-        return lambda_f, lambda_df
-    except ValueError as e:
-        print(f"Error: {e}")
-
-
 # Main loop for user input and plotting
+author = "\n|----------------------------------------|\n| Made by Mike Verwer, M.Sc. Mathematics |\n|----------------------------------------|\n"
+print(author)
+
 x = sp.symbols('x')
 
 f, df = ask_for_function(x)
@@ -140,6 +145,7 @@ while True:
     if run_again != 'y':
         run_with_new_function = input("Would you like to use a different function? (y/n): ").strip().lower()
         if run_with_new_function != 'y':
+            print(author)
             break
         else:
             f, df = ask_for_function(x)
