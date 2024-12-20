@@ -6,6 +6,7 @@ import os
 import re
 import numpy as np
 import sympy as sp
+from sympy.calculus.util import continuous_domain
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -33,8 +34,8 @@ class NewtonApp(Tk):
 
         # Initialize variables
         self.x = sp.symbols('x')
-        self.f = None
-        self.df = None
+        self.f = sp.Function('f')(self.x)
+        self.df = sp.Function('df')(self.x)
         self.valid_expression: bool = True
         self.plots_figure = Figure(figsize=(16, 9), dpi=100)
         self.newton_ax = self.plots_figure.add_subplot(211)
@@ -154,11 +155,11 @@ class NewtonApp(Tk):
 
             try:
                 self.input_error_label.config(text="")
-                expr = sp.sympify(func_input)
-                latex_expr = sp.latex(expr)
-                derivative = expr.diff(self.x)
+                self.expr = sp.sympify(func_input)
+                latex_expr = sp.latex(self.expr)
+                derivative = self.expr.diff(self.x)
 
-                self.f = sp.lambdify(self.x, expr, 'numpy')
+                self.f = sp.lambdify(self.x, self.expr, 'numpy')
                 self.df = sp.lambdify(self.x, derivative, 'numpy')
 
                 self.render_latex(latex_expr)  
@@ -206,8 +207,18 @@ class NewtonApp(Tk):
         # Set the scrollregion for the image
         self.pretty_math_display.config(scrollregion=self.pretty_math_display.bbox("all"))
         return
+    
+    def determine_domain(self):
+        domain = continuous_domain(self.expr, self.x, sp.Reals)
+        print(domain)
+        print(type(domain))
+        str_domain = str(domain)
+        self.log(str_domain)
+        # self.log(domain)
+        return
 
     def execute_method(self):
+        self.determine_domain()
         guess = self.guess_entry.get()
         self.log("\n")
         self.log(f"Initial guess: x\u2080 = {guess}")
@@ -282,7 +293,7 @@ class NewtonApp(Tk):
                 self.newton_ax.plot(xi, fx, 'o', color=this_color, markersize=7)
 
         self.newton_ax.plot(x_history[-1], f(x_history[-1]), 'o-', markerfacecolor='none', markeredgecolor='blue',
-                            linestyle = 'none', markersize=12, label='Root')
+                            markersize=12, label='Root')
         self.newton_ax.axhline(y=0, color='r', linestyle='-')                                               # Highlight x-axis
         self.newton_ax.set_xlabel('x')
         self.newton_ax.set_ylabel('f(x)')
