@@ -43,6 +43,7 @@ class NewtonApp(Tk):
         # Window Creation
         self.build_window()
         self.update_idletasks()  # wait until the window is finished
+        self.print_pretty_math()
         self.position_window()
         self.do_bindings()
         return    
@@ -128,7 +129,13 @@ class NewtonApp(Tk):
         self.guess_entry.grid(row=0, column=1, sticky=W)
 
         plot_button = ttk.Button(self.content_frame, text="Plot", command=self.execute_method)
-        plot_button.grid(row=99, column=0, sticky=W)
+        plot_button.grid(row=7, column=0, sticky=W)
+
+        # Logging Text
+        self.logging_text = Text(self.content_frame, width=40, height=8, font='Helvetica 9', background="#dcdcdc", wrap='none')
+        self.logging_text.grid(row=99, column=0, sticky=S, rowspan=8, padx=5)
+        self.logging_text.insert('1.0', "Logging Window\n\n")
+        self.logging_text["state"] = "disabled"
         return
     
     def print_pretty_math(self):
@@ -202,6 +209,8 @@ class NewtonApp(Tk):
 
     def execute_method(self):
         guess = self.guess_entry.get()
+        self.log("\n")
+        self.log(f"Initial guess: x\u2080 = {guess}")
         # try:
         guess = float(guess)
         self.input_error_label.config(text="")
@@ -210,6 +219,7 @@ class NewtonApp(Tk):
             self.newton_ax.clear()
             self.plot_function_and_tangents(self.f, self.df, x_history)
             self.plots_canvas.draw()
+            self.log(f"\nThe approximate root is:\n    x* = {root}\nFound after {len(x_history)} iterations.")
         else:
             self.input_error_label.config(text="Can not plot. Function input is not a valid expression.")
         # except: 
@@ -236,17 +246,17 @@ class NewtonApp(Tk):
         x_history = [x]
         for i in range(max_iter):
             fx = f(x)
-            print(f"Approximate root for iteration {i+1} is {x:.6f}")
+            self.log(f"Approximate root for iteration {i+1} is {x:.6f}")
             if abs(fx) < tol:
                 return x, x_history, error_code
             dfx = df(x)
             if dfx == 0:
-                print("Derivative is zero at the current point, can not continue.")
+                self.log("Derivative is zero at the current point, can not continue.")
                 error_code = "0 derivative"
                 return x, x_history, error_code
             x = x - fx / dfx
             x_history.append(x)
-        print("Maximum number of iterations reached without convergence.")
+        self.log("Maximum number of iterations reached without convergence.")
         error_code = "max iterations"
         return x, x_history, error_code
     
@@ -271,7 +281,8 @@ class NewtonApp(Tk):
                 self.newton_ax.plot([xi, xi], [fx, 0], '--', color=this_color)                               # Vertical line to function
                 self.newton_ax.plot(xi, fx, 'o', color=this_color, markersize=7)
 
-        self.newton_ax.plot(x_history[-1], f(x_history[-1]), 'ro', markersize=10, label='Root')
+        self.newton_ax.plot(x_history[-1], f(x_history[-1]), 'o-', markerfacecolor='none', markeredgecolor='blue',
+                            linestyle = 'none', markersize=12, label='Root')
         self.newton_ax.axhline(y=0, color='r', linestyle='-')                                               # Highlight x-axis
         self.newton_ax.set_xlabel('x')
         self.newton_ax.set_ylabel('f(x)')
@@ -282,6 +293,18 @@ class NewtonApp(Tk):
         plt.show(block=False)
         plt.pause(0.1)
         return
+    
+    def log(self, message, end=None, route_print=True):
+        log_widget = self.logging_text
+        log_widget['state'] = 'normal'
+        if route_print:
+            print(message, end=end)
+        if end is None:
+            end = '\n'
+        message += end
+        log_widget.insert(END, message)
+        log_widget.see('end')
+        log_widget['state'] = 'disabled'
 
     
 if __name__ == '__main__':
